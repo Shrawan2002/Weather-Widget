@@ -2,18 +2,20 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import "./SearchBox.css";
 import { useState } from 'react';
-export default function SearchBox(){
+export default function SearchBox({updateInfo}){
     let [city,setCity] = useState("");
-    let [data,setData] = useState();
-
+    let [err,setErr] = useState(false);
 
     const API_URL = "https://api.openweathermap.org/data/2.5/weather";
     const API_KEY = "bf240d3f03ef13b9a31605b016e40eac";
 
    let getWeatherInfo = async ()=>{
-    let response = await fetch(`${API_URL}?q=${city}&appid=${API_KEY}&units=metric`);
+    try{
+        //openweathermap.org/current
+        let response = await fetch(`${API_URL}?q=${city}&appid=${API_KEY}&units=metric`);
     let jsonResponse = await response.json();
     let result ={
+        city:city,
         temp:jsonResponse.main.temp,
         temp_max: jsonResponse.main.temp_max,
         temp_min: jsonResponse.main.temp_min,
@@ -23,30 +25,34 @@ export default function SearchBox(){
     }
     console.log(result);
     return result ;
+    }catch(err){
+        throw err;
+    }
    }
     let handleInput = (event)=>{
         setCity(event.target.value);
     }
 
     let handleSubmit = async (event)=>{
+       try{
         event.preventDefault();
         console.log(city);
         let info= await getWeatherInfo();
         setCity("");
-        setData(info);
+        updateInfo(info);
+       }catch(err){
+         setErr(true);
+       }
     }
     return(
         <div className='SearchBox'>
-            <h3>Search For the Weather</h3>
             <form onSubmit={handleSubmit}>
             <TextField onChange={handleInput} value={city} id="city" label="City Name" variant="outlined" required />
             <br></br>
             <br></br>
             <Button variant="contained" type='submit'>Search</Button>
-
             </form>
-        
-            {data&&<p>{data.temp}</p>}
+            {err&& <p style={{color:"red"}}>No Such Place Exists!</p>} 
         </div>
     )
 }
